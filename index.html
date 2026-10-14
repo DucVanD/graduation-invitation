@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thiệp Tốt Nghiệp</title>
+
+    <!-- Favicon Icon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="alternate icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%233b82f6'/><text x='16' y='22' font-size='18' text-anchor='middle'>🎓</text></svg>">
+
+    <!-- Google Fonts: Playfair Display (Vietnamese Serif) + Montserrat + Be Vietnam Pro -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Montserrat:wght@600;700;800&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Be Vietnam Pro"', 'sans-serif'],
+                        serif: ['"Playfair Display"', 'serif'],
+                        montserrat: ['"Montserrat"', 'sans-serif'],
+                    },
+                    colors: {
+                        navy: {
+                            50:  '#f8fafc',
+                            100: '#f1f5f9',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        gold: {
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            700: '#b45309',
+                        }
+                    },
+                    keyframes: {
+                        fadeUp: {
+                            '0%':   { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        floatNote: {
+                            '0%, 100%': { transform: 'translateY(0) rotate(-5deg)' },
+                            '50%':      { transform: 'translateY(-8px) rotate(-5deg)' },
+                        },
+                        envelope: {
+                            '0%':   { transform: 'scale(1)' },
+                            '50%':  { transform: 'scale(1.06)' },
+                            '100%': { transform: 'scale(1)' },
+                        },
+                        flap: {
+                            '0%':   { transform: 'rotateX(0deg)' },
+                            '100%': { transform: 'rotateX(-180deg)' },
+                        },
+                        slide: {
+                            '0%':   { opacity: '0', transform: 'translateX(40px)' },
+                            '100%': { opacity: '1', transform: 'translateX(0)' },
+                        },
+                    },
+                    animation: {
+                        'fadeUp':     'fadeUp 0.6s ease both',
+                        'floatNote':  'floatNote 3s ease-in-out infinite',
+                        'envelope':   'envelope 2s ease-in-out infinite',
+                        'slide':      'slide 0.4s ease both',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* === Slide wrapper === */
+        /* Mobile: fill screen (100dvh), scroll active slide internally */
+        .card-phone {
+            position: relative;
+            width: 100%;
+            height: 100dvh;
+            max-height: 100dvh;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            border-radius: 0;
+            overflow: hidden;
+        }
+
+        /* Slide pages */
+        .slide-page {
+            display: none;
+            width: 100%;
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            animation: appear 0.4s ease-out both;
+        }
+        .slide-page.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Sleek thin scrollbar */
+        .slide-page::-webkit-scrollbar {
+            width: 4px;
+        }
+        .slide-page::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .slide-page::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        /* Desktop (≥640 px): fixed-height phone card mockup */
+        @media (min-width: 640px) {
+            .card-phone {
+                width: 390px;
+                height: 740px;
+                min-height: 740px;
+                max-height: 740px;
+                border-radius: 32px;
+                box-shadow:
+                    0 4px 6px rgba(0,0,0,0.03),
+                    0 20px 60px rgba(59,130,246,0.2),
+                    0 1px 0 rgba(255,255,255,0.9) inset;
+            }
+        }
+
+        @keyframes appear {
+            from { opacity: 0; transform: translateX(20px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+
+        /* Dots navigation */
+        .dot { transition: all 0.3s ease; }
+        .dot.active {
+            background-color: #0f172a;
+            width: 24px;
+        }
+
+        /* Decorative sparkle */
+        .sparkle::before,
+        .sparkle::after {
+            content: '✦';
+            color: #d97706;
+            font-size: 10px;
+            position: absolute;
+        }
+        .sparkle::before { top: -4px; left: -6px; }
+        .sparkle::after  { bottom: -4px; right: -6px; }
+
+        /* Photo frame */
+        .photo-frame {
+            border: 3px solid #cbd5e1;
+            box-shadow: 0 8px 25px rgba(15,23,42,0.12);
+        }
+
+        /* Input styling */
+        .wish-input:focus { outline: none; border-color: #0f172a; box-shadow: 0 0 0 3px rgba(15,23,42,0.15); }
+
+        /* Radio custom */
+        .radio-opt input[type="radio"] { display: none; }
+        .radio-opt label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.25s;
+            font-size: 14px;
+            color: #475569;
+        }
+        .radio-opt input[type="radio"]:checked + label {
+            border-color: #0f172a;
+            background: #f8fafc;
+            color: #0f172a;
+            font-weight: 600;
+        }
+        .radio-dot {
+            width: 16px; height: 16px;
+            border-radius: 50%;
+            border: 2px solid #cbd5e1;
+            flex-shrink: 0;
+            transition: all 0.25s;
+        }
+        .radio-opt input[type="radio"]:checked + label .radio-dot {
+            border-color: #0f172a;
+            background: #0f172a;
+            box-shadow: inset 0 0 0 3px #fff;
+        }
+
+        /* Submit button gradient */
+        .btn-submit {
+            background: linear-gradient(135deg, #0f172a, #1e3a8a);
+            transition: all 0.3s;
+        }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(15,23,42,0.35); }
+        .btn-submit:active { transform: translateY(0); }
+
+        /* Envelope opening animation */
+        .envelope-body { cursor: pointer; }
+        .envelope-flap {
+            transform-origin: top center;
+            transition: transform 0.6s ease;
+        }
+        .envelope-body:hover .envelope-flap {
+            transform: rotateX(-25deg);
+        }
+
+        /* Music Disc Animation */
+        @keyframes spinDisc {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .spin-music {
+            animation: spinDisc 3s linear infinite;
+        }
+
+        /* Clock Slow Spin Animation */
+        @keyframes spinSlow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .spin-slow {
+            display: inline-block;
+            animation: spinSlow 8s linear infinite;
+        }
+
+        /* Polaroid Photo Zoom & Camera Effect for Slide 4 */
+        @keyframes polaroidZoom {
+            0% { opacity: 0; transform: scale(0.85) rotate(-3deg); }
+            100% { opacity: 1; transform: scale(1) rotate(0deg); }
+        }
+        .polaroid-card {
+            background: #ffffff;
+            padding: 10px 10px 22px 10px;
+            box-shadow: 0 14px 35px rgba(15,23,42,0.18), 0 3px 10px rgba(217,119,6,0.15);
+            border: 1px solid #f1f5f9;
+            border-radius: 20px;
+            transform-origin: center;
+        }
+        #slide-4.active .polaroid-card {
+            animation: polaroidZoom 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        /* Staggered fade in elements on Slide 4 */
+        @keyframes fadeInUpSoft {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        #slide-4.active .fade-stagger-1 { animation: fadeInUpSoft 0.6s ease 0.3s both; }
+        #slide-4.active .fade-stagger-2 { animation: fadeInUpSoft 0.6s ease 0.5s both; }
+        #slide-4.active .fade-stagger-3 { animation: fadeInUpSoft 0.6s ease 0.7s both; }
+        #slide-4.active .fade-stagger-4 { animation: fadeInUpSoft 0.6s ease 0.9s both; }
+    </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 font-sans flex items-center justify-center sm:p-6 relative overflow-hidden text-slate-800">
+
+    <!-- Background Music Audio Element -->
+    <audio id="bg-music" autoplay loop preload="auto">
+        <source src="music.mp3" type="audio/mpeg">
+        <source src="Photograph.mp3" type="audio/mpeg">
+        <source src="photograph.mp3" type="audio/mpeg">
+        <source src="Ed Sheeran Photograph Official Lyric Video.mp3" type="audio/mpeg">
+        <source src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=happy-day-113985.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Decorative background dots -->
+    <div class="absolute inset-0 pointer-events-none overflow-hidden">
+        <div class="absolute top-10 left-10 w-2 h-2 rounded-full bg-amber-400 opacity-40"></div>
+        <div class="absolute top-32 right-16 w-3 h-3 rounded-full bg-slate-600 opacity-40"></div>
+        <div class="absolute bottom-20 left-20 w-2 h-2 rounded-full bg-amber-300 opacity-40"></div>
+        <div class="absolute bottom-40 right-10 w-4 h-4 rounded-full bg-slate-700 opacity-40"></div>
+        <div class="absolute top-1/2 left-6  w-2 h-2 rounded-full bg-amber-400 opacity-30"></div>
+        <!-- Confetti stars -->
+        <div class="absolute top-16 left-1/3 text-amber-400 text-lg select-none opacity-60 animate-floatNote">✦</div>
+        <div class="absolute top-24 right-1/4 text-slate-400 text-sm select-none opacity-40 animate-floatNote" style="animation-delay:.8s">✦</div>
+        <div class="absolute bottom-28 right-1/3 text-amber-300 text-base select-none opacity-60 animate-floatNote" style="animation-delay:1.4s">✦</div>
+    </div>
+
+    <!-- Card Wrapper -->
+    <div class="relative z-10 flex flex-col items-center w-full sm:w-auto">
+
+        <!-- Phone Card -->
+        <div class="card-phone">
+
+            <!-- Sticky Top Header Bar (Fixed & persistent across all slide transitions) -->
+            <div id="sticky-header" class="sticky top-0 z-30 w-full bg-white/95 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-slate-100 shrink-0">
+                <!-- Back Button -->
+                <button id="nav-back-btn" onclick="prevSlide()" class="p-1 rounded-lg hover:bg-slate-100 transition text-slate-400 hover:text-slate-800 opacity-0 pointer-events-none">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+
+                <!-- Dots Bar Indicator (Fixed horizontally) -->
+                <div id="dot-bar" class="flex items-center gap-2">
+                    <div onclick="goToSlide(1)" title="Phong bì" class="dot active cursor-pointer w-6 h-2 rounded-full bg-slate-900"></div>
+                    <div onclick="goToSlide(2)" title="Lời mời & Lịch" class="dot cursor-pointer w-2 h-2 rounded-full bg-slate-200 hover:bg-slate-300"></div>
+                    <div onclick="goToSlide(3)" title="Xác nhận" class="dot cursor-pointer w-2 h-2 rounded-full bg-slate-200 hover:bg-slate-300"></div>
+                    <div onclick="goToSlide(4)" title="Cảm ơn" class="dot cursor-pointer w-2 h-2 rounded-full bg-slate-200 hover:bg-slate-300"></div>
+                </div>
+
+                <!-- Right Controls: Music Toggle + Next Slide -->
+                <div class="flex items-center gap-1.5">
+                    <button id="music-toggle-btn" onclick="toggleMusic()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-amber-100 transition text-slate-700 relative flex items-center justify-center border border-slate-200 shadow-xs" title="Bật/Tắt nhạc nền">
+                        <span id="music-icon" class="text-sm inline-block leading-none">🎵</span>
+                    </button>
+                    <button id="nav-next-btn" onclick="nextSlide()" class="p-1 rounded-lg hover:bg-slate-100 transition text-slate-400 hover:text-slate-800">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                </div>
+            </div>
+
+
+            <!-- =====================================
+                 SLIDE 1: PHONG BÌ (COVER)
+            ===================================== -->
+            <div id="slide-1" class="slide-page active flex-col items-center justify-center bg-white px-8 py-8 relative">
+
+                <!-- Logo / University placeholder -->
+                <div class="mb-5 text-center">
+                    <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-slate-900 border-2 border-amber-500 shadow-md mb-2">
+                        <span class="text-2xl">🎓</span>
+                    </div>
+                    <div class="text-xs tracking-[0.2em] text-slate-500 uppercase font-semibold">Cao đẳng Công Thương TP.HCM</div>
+                </div>
+
+                <!-- Title -->
+                <h1 class="font-montserrat text-3xl sm:text-4xl text-slate-900 tracking-[0.2em] font-extrabold mb-2 text-center uppercase">GRADUATION</h1>
+                <div class="w-16 h-1 bg-amber-500 mx-auto mb-8 rounded-full"></div>
+
+                <!-- Envelope -->
+                <div class="envelope-body mb-8 relative" onclick="goToSlide(2)">
+                    <div class="animate-envelope">
+                        <!-- Envelope SVG -->
+                        <svg width="180" height="130" viewBox="0 0 180 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Body -->
+                            <rect x="5" y="30" width="170" height="95" rx="10" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+                            <!-- Flap -->
+                            <path class="envelope-flap" d="M5 30 L90 80 L175 30 Q175 20 165 20 H15 Q5 20 5 30Z" fill="#334155" stroke="#475569" stroke-width="1.5"/>
+                            <!-- Bottom folds -->
+                            <path d="M5 125 L70 72 M175 125 L110 72" stroke="#475569" stroke-width="1.5" opacity="0.6"/>
+                            <!-- Center seal avatar -->
+                            <circle cx="90" cy="88" r="22" fill="#d97706" stroke="#f59e0b" stroke-width="2"/>
+                            <text x="90" y="94" text-anchor="middle" fill="white" font-size="16" font-weight="bold" font-family="sans-serif">ĐV</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- CTA -->
+                <button onclick="goToSlide(2)" class="text-slate-500 text-xs tracking-widest flex flex-col items-center gap-2 transition hover:text-amber-600 font-semibold uppercase">
+                    <span>CHẠM VÀO PHONG BÌ ĐỂ MỞ THIỆP</span>
+                    <svg class="w-4 h-4 animate-bounce text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+
+                <!-- Signature bottom -->
+                <div class="mt-8 text-center">
+                    <div class="font-montserrat text-lg text-slate-900 font-bold tracking-widest uppercase">ĐOÀN VĂN ĐỨC</div>
+                    <div class="text-xs text-amber-600 font-semibold tracking-widest mt-0.5">2023 — 2026</div>
+                </div>
+
+                <!-- Floating sparkles -->
+                <div class="absolute top-6 right-6 text-amber-400 text-sm animate-floatNote opacity-60 pointer-events-none select-none">✦</div>
+                <div class="absolute bottom-8 left-6 text-slate-400 text-xs animate-floatNote opacity-40 pointer-events-none select-none" style="animation-delay:.9s">✦</div>
+            </div>
+
+
+            <!-- =====================================
+                 SLIDE 2: LỜI MỜI CHÍNH
+            ===================================== -->
+            <div id="slide-2" class="slide-page flex-col bg-white overflow-y-auto pb-6 relative">
+
+                <!-- Floating sparkles for Slide 2 -->
+                <div class="absolute top-4 left-4 text-amber-400 text-sm animate-floatNote opacity-60 pointer-events-none select-none">✦</div>
+                <div class="absolute top-20 right-5 text-slate-300 text-xs animate-floatNote opacity-40 pointer-events-none select-none" style="animation-delay:.8s">✦</div>
+                <div class="absolute bottom-16 left-5 text-amber-500 text-xs animate-floatNote opacity-50 pointer-events-none select-none" style="animation-delay:1.4s">✦</div>
+
+                <!-- Photo (anh-main.jpg) - Fit & Enlarged -->
+                <div class="photo-frame w-48 h-60 rounded-2xl overflow-hidden shadow-lg mx-auto shrink-0 mt-3 border-2 border-amber-500/80">
+                    <img src="images/anh-main.jpg" alt="Đoàn Văn Đức" class="w-full h-full object-cover object-top">
+                </div>
+
+                <!-- Invitation text -->
+                <div class="px-6 text-center mt-3 shrink-0">
+                    <h2 class="font-montserrat text-2xl text-slate-900 font-extrabold tracking-[0.2em] uppercase">GRADUATION 2026</h2>
+                    <p class="text-slate-500 text-xs mt-1">Trân trọng kính mời <span id="invite-guest-name" class="font-bold text-slate-800">Bạn thân mến</span> tới tham dự lễ tốt nghiệp của</p>
+                    <h3 id="graduate-name" class="font-montserrat text-2xl text-amber-600 font-extrabold mt-1 tracking-wider uppercase">ĐOÀN VĂN ĐỨC</h3>
+                </div>
+
+                <!-- Live Countdown Timer -->
+                <div class="px-5 mt-3 shrink-0">
+                    <div class="bg-gradient-to-r from-slate-950 via-slate-900 to-blue-950 text-white rounded-2xl p-3.5 text-center shadow-md border border-slate-800">
+                        <div class="text-[10px] uppercase tracking-widest text-amber-400 font-semibold mb-2 flex items-center justify-center gap-1.5">
+                            <span class="spin-slow text-sm">⏳</span> <span>ĐẾM NGƯỢC ĐẾN NGÀY TỐT NGHIỆP</span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-2">
+                            <div class="bg-slate-800/80 rounded-xl p-1.5 border border-slate-700/60">
+                                <span id="cd-days" class="font-montserrat font-extrabold text-base text-amber-400 block">00</span>
+                                <div class="text-[9px] text-slate-400 uppercase">Ngày</div>
+                            </div>
+                            <div class="bg-slate-800/80 rounded-xl p-1.5 border border-slate-700/60">
+                                <span id="cd-hours" class="font-montserrat font-extrabold text-base text-white block">00</span>
+                                <div class="text-[9px] text-slate-400 uppercase">Giờ</div>
+                            </div>
+                            <div class="bg-slate-800/80 rounded-xl p-1.5 border border-slate-700/60">
+                                <span id="cd-mins" class="font-montserrat font-extrabold text-base text-white block">00</span>
+                                <div class="text-[9px] text-slate-400 uppercase">Phút</div>
+                            </div>
+                            <div class="bg-slate-800/80 rounded-xl p-1.5 border border-slate-700/60">
+                                <span id="cd-secs" class="font-montserrat font-extrabold text-base text-amber-400 block">00</span>
+                                <div class="text-[9px] text-slate-400 uppercase">Giây</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Divider -->
+                <div class="flex items-center gap-3 px-6 my-3 shrink-0">
+                    <div class="flex-1 h-px bg-slate-200"></div>
+                    <span class="text-amber-500 text-xs">🎓</span>
+                    <div class="flex-1 h-px bg-slate-200"></div>
+                </div>
+
+                <!-- ===== MINI CALENDAR ===== -->
+                <div class="px-5 shrink-0">
+                    <div class="bg-white border border-slate-200/90 rounded-2xl overflow-hidden shadow-md">
+                        <!-- Calendar header -->
+                        <div class="bg-gradient-to-r from-slate-950 via-slate-900 to-blue-950 text-amber-400 py-2.5 px-4 text-center border-b border-amber-500/20">
+                            <div class="font-montserrat text-xs font-bold tracking-widest uppercase" id="cal-title">Tháng 10, 2026</div>
+                        </div>
+                        <!-- Day labels -->
+                        <div class="grid grid-cols-7 bg-slate-50 border-b border-slate-100 text-[11px] font-semibold py-1.5">
+                            <div class="text-center text-red-500">CN</div>
+                            <div class="text-center text-slate-500">T2</div>
+                            <div class="text-center text-slate-500">T3</div>
+                            <div class="text-center text-slate-500">T4</div>
+                            <div class="text-center text-slate-500">T5</div>
+                            <div class="text-center text-slate-500">T6</div>
+                            <div class="text-center text-slate-500">T7</div>
+                        </div>
+                        <!-- Day cells -->
+                        <div id="cal-grid" class="grid grid-cols-7 p-2 gap-1 bg-white"></div>
+                    </div>
+                </div>
+
+                <!-- Time + Location rows -->
+                <div class="px-5 mt-3 space-y-2 shrink-0">
+                    <!-- Time -->
+                    <div class="flex items-center gap-3 bg-slate-50 border border-slate-200/80 rounded-xl px-4 py-2.5">
+                        <span class="text-lg shrink-0">⏰</span>
+                        <div>
+                            <div class="text-slate-400 text-xs uppercase tracking-wide font-medium">Thời gian bắt đầu lễ</div>
+                            <div id="event-time" class="font-bold text-slate-800 text-sm">07:30 (Chủ Nhật, 25/10/2026)</div>
+                        </div>
+                    </div>
+                    <!-- Location -->
+                    <div class="flex items-start gap-3 bg-slate-50 border border-slate-200/80 rounded-xl px-4 py-2.5">
+                        <span class="text-lg shrink-0 mt-0.5">📍</span>
+                        <div class="min-w-0">
+                            <div class="text-slate-400 text-xs uppercase tracking-wide font-medium">Địa điểm</div>
+                            <div id="event-location-name" class="font-bold text-slate-800 text-sm">Hội trường lầu 6, Khu A, Trường Cao đẳng Công Thương TP.HCM</div>
+                            <div id="event-location-address" class="text-slate-500 text-xs mt-0.5">20 Tăng Nhơn Phú, P. Phước Long B, TP. Thủ Đức, TP.HCM</div>
+                        </div>
+                    </div>
+                    <!-- Contact Phone -->
+                    <div class="flex items-center gap-3 bg-slate-50 border border-slate-200/80 rounded-xl px-4 py-2.5">
+                        <span class="text-lg shrink-0">📞</span>
+                        <div class="min-w-0">
+                            <div class="text-slate-400 text-xs uppercase tracking-wide font-medium">Liên hệ khi đến</div>
+                            <a href="tel:0347762864" id="contact-phone-link" class="font-bold text-amber-600 text-sm hover:underline">0347 762 864 (Đức)</a>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <!-- ===== EMBEDDED MAP ===== -->
+                <div class="px-5 mt-3 shrink-0">
+                    <div class="rounded-2xl overflow-hidden border border-slate-200 shadow-sm" style="height:170px">
+                        <iframe
+                            src="https://maps.google.com/maps?q=Tr%C6%B0%E1%BB%9Dng+Cao+%C4%91%E1%BA%B3ng+C%C3%B4ng+Th%C6%B0%C6%A1ng+TP.HCM,+20+T%C4%83ng+Nh%C6%A1n+Ph%C3%BA,+Ph%C6%B0%E1%BB%9Bc+Long+B,+Th%E1%BB%A7+%C4%90%E1%BB%A9c&t=&z=16&ie=UTF8&iwloc=&output=embed"
+                            width="100%" height="170"
+                            style="border:0; display:block;"
+                            allowfullscreen loading="lazy"
+                            referrerpolicy="no-referrer-when-downgrade">
+                        </iframe>
+                    </div>
+                    <a href="https://www.google.com/maps/search/?api=1&query=Tr%C6%B0%E1%BB%9Dng+Cao+%C4%91%E1%BA%B3ng+C%C3%B4ng+Th%C6%B0%C6%A1ng+TP.HCM,+20+T%C4%83ng+Nh%C6%A1n+Ph%C3%BA"
+                       target="_blank" rel="noopener"
+                       class="mt-1.5 flex items-center justify-center gap-1.5 text-amber-600 text-xs font-semibold hover:underline">
+                        🔗 Mở trong Google Maps
+                    </a>
+                </div>
+
+                <!-- RSVP Button -->
+                <div class="w-full px-5 py-5 shrink-0">
+                    <button onclick="goToSlide(3)" class="btn-submit w-full py-3.5 rounded-2xl text-white font-semibold text-sm tracking-wide flex items-center justify-center gap-2 shadow-md">
+                        <span>✍️</span>
+                        <span>Xác nhận tham dự</span>
+                    </button>
+                </div>
+            </div>
+
+
+            <!-- =====================================
+                 SLIDE 3: FORM XÁC NHẬN THAM DỰ
+            ===================================== -->
+            <div id="slide-3" class="slide-page flex-col bg-white overflow-y-auto relative">
+
+                <!-- Floating sparkles for Slide 3 -->
+                <div class="absolute top-5 left-5 text-amber-400 text-sm animate-floatNote opacity-50 pointer-events-none select-none">✦</div>
+                <div class="absolute top-14 right-6 text-slate-400 text-xs animate-floatNote opacity-40 pointer-events-none select-none" style="animation-delay:1.1s">✦</div>
+                <div class="absolute bottom-8 right-5 text-amber-500 text-xs animate-floatNote opacity-60 pointer-events-none select-none" style="animation-delay:.6s">✦</div>
+
+                <!-- Form content -->
+                <div class="flex-1 px-6 py-6 space-y-5">
+                    <!-- Header -->
+                    <div class="text-center mb-1">
+                        <h2 class="font-serif font-bold text-slate-900 text-lg uppercase tracking-wide">Xác Nhận Tham Dự</h2>
+                    </div>
+
+                    <!-- Guest Name input -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                            Tên của bạn: <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="guest-name-input"
+                            class="wish-input w-full px-4 py-2.5 border-2 border-slate-200 rounded-2xl text-slate-700 text-sm bg-slate-50 transition-all"
+                            placeholder="Nhập tên hoặc biệt danh của bạn..."
+                            oninput="document.getElementById('name-error-msg').classList.add('hidden'); this.classList.remove('border-red-500','bg-red-50');">
+                        <p id="name-error-msg" class="hidden text-xs text-red-500 font-semibold mt-1.5 flex items-center gap-1">
+                            ⚠️ Vui lòng nhập tên hoặc biệt danh của bạn nhé!
+                        </p>
+                    </div>
+
+                    <!-- Wish message -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                            Lời chúc dành cho tân cử nhân:
+                        </label>
+                        <textarea id="wish-input" rows="3"
+                            class="wish-input w-full px-4 py-3 border-2 border-slate-200 rounded-2xl text-slate-700 text-sm resize-none bg-slate-50 transition-all"
+                            placeholder="Gửi vài lời chúc mừng đến Đoàn Văn Đức tại đây..."></textarea>
+                    </div>
+
+                    <!-- Attendance radio -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                            Bạn sẽ đến chung vui chứ?
+                        </label>
+                        <div class="space-y-2">
+                            <div class="radio-opt">
+                                <input type="radio" name="attend" id="opt-1" value="opt-1" checked onchange="toggleCustomAttendInput()">
+                                <label for="opt-1">
+                                    <span class="radio-dot"></span>
+                                    🎉 Có chứ! Hẹn gặp bạn hôm đó
+                                </label>
+                            </div>
+                            <div class="radio-opt">
+                                <input type="radio" name="attend" id="opt-2" value="opt-2" onchange="toggleCustomAttendInput()">
+                                <label for="opt-2">
+                                    <span class="radio-dot"></span>
+                                    👥 Có, mình sẽ đi cùng một người
+                                </label>
+                            </div>
+                            <div class="radio-opt">
+                                <input type="radio" name="attend" id="opt-3" value="opt-3" onchange="toggleCustomAttendInput()">
+                                <label for="opt-3">
+                                    <span class="radio-dot"></span>
+                                    🤔 Để mình sắp xếp rồi báo bạn nhé
+                                </label>
+                            </div>
+                            <div class="radio-opt">
+                                <input type="radio" name="attend" id="opt-4" value="opt-4" onchange="toggleCustomAttendInput()">
+                                <label for="opt-4">
+                                    <span class="radio-dot"></span>
+                                    ✏️ Ý kiến khác / Ghi chú riêng...
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Custom Attend Text Input (Appears when Option 4 is selected) -->
+                        <div id="custom-attend-wrapper" class="hidden mt-2">
+                            <input type="text" id="custom-attend-input"
+                                class="wish-input w-full px-4 py-2.5 border-2 border-amber-300 rounded-2xl text-slate-700 text-xs bg-amber-50/50 transition-all font-medium"
+                                placeholder="Gõ phản hồi của bạn (VD: Tiếc quá không đến được, Ghé tặng hoa...)"
+                                value="💌 Tiếc quá, lần này mình không đến được">
+                        </div>
+                    </div>
+
+                    <!-- Time slot choice -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                            Khung giờ bạn dự định đến:
+                        </label>
+                        <select id="time-slot-select" class="wish-input w-full px-4 py-2.5 border-2 border-slate-200 rounded-2xl text-slate-700 text-sm bg-slate-50 transition-all font-semibold">
+                            <option value="8h00 - 9h00">⏰ 8h00 – 9h00 (Sáng)</option>
+                            <option value="9h00 - 10h00" selected>⏰ 9h00 – 10h00 (Sáng)</option>
+                            <option value="10h00 - 11h00">⏰ 10h00 – 11h00 (Sáng)</option>
+                        </select>
+                    </div>
+
+                    <!-- Submit -->
+                    <button id="submit-btn" onclick="submitRSVP()" class="btn-submit w-full py-3.5 rounded-2xl text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-md mt-2">
+                        <span>✍️</span>
+                        <span>Gửi xác nhận</span>
+                    </button>
+                </div>
+            </div>
+
+
+            <!-- =====================================
+                 SLIDE 4: CẢM ƠN (THANK YOU)
+            ===================================== -->
+            <div id="slide-4" class="slide-page flex-col items-center justify-center bg-white px-8 py-8 relative">
+
+                <!-- Polaroid Photo Effect (anh-tab-cuoi.png) -->
+                <div class="polaroid-card w-48 mb-4 mt-2 shrink-0">
+                    <div class="w-full h-56 rounded-xl overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center">
+                        <img src="images/anh-tab-cuoi.png" alt="Đoàn Văn Đức" class="w-full h-full object-contain p-2">
+                    </div>
+                </div>
+
+                <!-- Thank you text with staggered animation -->
+                <div class="text-center space-y-2 mb-3 shrink-0 fade-stagger-1">
+                    <h3 class="font-montserrat text-xl text-slate-900 font-extrabold tracking-wide uppercase">
+                        Tốt nghiệp rồi! 🎓
+                    </h3>
+                    <p class="text-slate-600 text-xs leading-relaxed max-w-xs mx-auto font-medium">
+                        Một cột mốc đáng nhớ,<br>
+                        và sẽ vui hơn khi có bạn cùng chia sẻ.
+                    </p>
+                </div>
+
+                <!-- Gold Divider -->
+                <div class="w-32 h-px bg-amber-400/80 mx-auto my-2 shrink-0 fade-stagger-2"></div>
+
+                <!-- Date & Signature -->
+                <div class="text-center shrink-0 space-y-1 mt-1 fade-stagger-3">
+                    <div class="text-amber-600 text-xs font-bold tracking-widest">25.10.2026</div>
+                    <div class="font-montserrat text-lg text-slate-900 font-extrabold tracking-widest uppercase">ĐOÀN VĂN ĐỨC</div>
+                </div>
+
+                <!-- Tagline -->
+                <div class="text-xs text-amber-600 font-semibold tracking-wider italic mt-1 fade-stagger-4 shrink-0">
+                    See you there! ✨
+                </div>
+
+                <!-- Decorative sparkles -->
+                <div class="absolute bottom-8 left-6 text-amber-400 text-base animate-floatNote opacity-60 pointer-events-none select-none">✦</div>
+                <div class="absolute bottom-16 right-6 text-slate-400 text-xs animate-floatNote opacity-50 pointer-events-none select-none" style="animation-delay:.7s">✦</div>
+                <div class="absolute top-20 right-6 text-amber-400 text-xs animate-floatNote opacity-60 pointer-events-none select-none" style="animation-delay:1.2s">✦</div>
+            </div>
+
+        </div><!-- end card-phone -->
+    </div><!-- end wrapper -->
+
+
+    <script>
+        let current = 1;
+        const total  = 4;
+        let isMusicPlaying = false;
+        const START_SECOND = 0; // Phát bản Piano Cover mượt mà từ đầu
+
+        function playMusic() {
+            const audio = document.getElementById('bg-music');
+            const musicIcon = document.getElementById('music-icon');
+            if (!audio) return;
+
+            if (!isMusicPlaying && START_SECOND > 0 && audio.currentTime < START_SECOND) {
+                audio.currentTime = START_SECOND;
+            }
+
+            audio.play().then(() => {
+                isMusicPlaying = true;
+                if (musicIcon) {
+                    musicIcon.classList.add('spin-music');
+                    musicIcon.textContent = '🎵';
+                }
+            }).catch(err => {
+                console.log("Autoplay waiting for user gesture:", err);
+            });
+        }
+
+        function toggleMusic() {
+            const audio = document.getElementById('bg-music');
+            const musicIcon = document.getElementById('music-icon');
+            if (!audio) return;
+
+            if (isMusicPlaying) {
+                audio.pause();
+                isMusicPlaying = false;
+                if (musicIcon) {
+                    musicIcon.classList.remove('spin-music');
+                    musicIcon.textContent = '🔇';
+                }
+            } else {
+                playMusic();
+            }
+        }
+
+        // Auto play music instantly on page load & any initial touch/click
+        function tryInstantPlay() {
+            if (!isMusicPlaying) playMusic();
+        }
+        window.addEventListener('DOMContentLoaded', tryInstantPlay);
+        window.addEventListener('load', tryInstantPlay);
+        ['click', 'touchstart', 'pointerdown', 'keydown', 'scroll'].forEach(evt => {
+            document.addEventListener(evt, tryInstantPlay, { once: true, passive: true });
+        });
+
+        function prevSlide() {
+            if (current > 1) goToSlide(current - 1);
+        }
+
+        function nextSlide() {
+            if (current < total) goToSlide(current + 1);
+        }
+
+        let hasFiredConfetti = false;
+
+        function triggerTab4Confetti() {
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 55,
+                    spread: 70,
+                    origin: { y: 0.65 }
+                });
+                setTimeout(() => {
+                    confetti({
+                        particleCount: 40,
+                        angle: 60,
+                        spread: 55,
+                        origin: { x: 0.15, y: 0.65 }
+                    });
+                    confetti({
+                        particleCount: 40,
+                        angle: 120,
+                        spread: 55,
+                        origin: { x: 0.85, y: 0.65 }
+                    });
+                }, 250);
+            }
+        }
+
+        function goToSlide(n) {
+            const pages   = document.querySelectorAll('.slide-page');
+            const dots    = document.querySelectorAll('#dot-bar .dot');
+            const backBtn = document.getElementById('nav-back-btn');
+            const nextBtn = document.getElementById('nav-next-btn');
+
+            pages.forEach(p => p.classList.remove('active'));
+            dots.forEach(d => {
+                d.classList.remove('active', 'w-6', 'bg-slate-900');
+                d.classList.add('w-2', 'bg-slate-200');
+            });
+
+            current = n;
+            const target = document.getElementById('slide-' + n);
+            if (target) {
+                target.classList.add('active');
+                target.scrollTop = 0;
+            }
+
+            const dot = dots[n - 1];
+            if (dot) {
+                dot.classList.add('active', 'w-6', 'bg-slate-900');
+                dot.classList.remove('w-2', 'bg-slate-200');
+            }
+
+            if (backBtn) {
+                if (current === 1) {
+                    backBtn.classList.add('opacity-0', 'pointer-events-none');
+                } else {
+                    backBtn.classList.remove('opacity-0', 'pointer-events-none');
+                }
+            }
+            if (nextBtn) {
+                if (current === total) {
+                    nextBtn.classList.add('opacity-0', 'pointer-events-none');
+                } else {
+                    nextBtn.classList.remove('opacity-0', 'pointer-events-none');
+                }
+            }
+
+            if (current === 3) resetSubmitButton();
+            if (current === 4 && !hasFiredConfetti) {
+                hasFiredConfetti = true;
+                setTimeout(triggerTab4Confetti, 400);
+            }
+        }
+
+        function toggleCustomAttendInput() {
+            const opt4 = document.getElementById('opt-4');
+            const wrapper = document.getElementById('custom-attend-wrapper');
+            const customInput = document.getElementById('custom-attend-input');
+            if (opt4 && wrapper) {
+                if (opt4.checked) {
+                    wrapper.classList.remove('hidden');
+                    if (customInput) customInput.focus();
+                } else {
+                    wrapper.classList.add('hidden');
+                }
+            }
+        }
+
+        function resetSubmitButton() {
+            const btn = document.getElementById('submit-btn');
+            if (!btn) return;
+            btn.disabled = false;
+            btn.innerHTML = '<span>✍️</span><span>Gửi xác nhận</span>';
+        }
+
+        function submitRSVP() {
+            const guestNameInput = document.getElementById('guest-name-input');
+            const errorMsg       = document.getElementById('name-error-msg');
+            const attendRadio    = document.querySelector('input[name="attend"]:checked');
+            let attendText       = '';
+            if (attendRadio) {
+                if (attendRadio.id === 'opt-4') {
+                    const customVal = document.getElementById('custom-attend-input')?.value.trim();
+                    attendText = customVal ? `✏️ ${customVal}` : '✏️ Ý kiến khác';
+                } else {
+                    attendText = attendRadio.nextElementSibling.innerText.trim();
+                }
+            }
+
+            const btn            = document.getElementById('submit-btn');
+            const guestName      = guestNameInput ? guestNameInput.value.trim() : '';
+            const wish           = document.getElementById('wish-input')?.value.trim() || '';
+            const timeSlotSelect = document.getElementById('time-slot-select');
+            const timeSlot       = timeSlotSelect ? timeSlotSelect.value : '';
+            const eventTime      = document.getElementById('event-time')?.textContent.trim() || '';
+            
+            const locName        = document.getElementById('event-location-name')?.textContent.trim() || '';
+            const locAddr        = document.getElementById('event-location-address')?.textContent.trim() || '';
+            const eventLocation  = (locName && locAddr) ? `${locName} (${locAddr})` : (locName || locAddr);
+
+            if (!guestName) {
+                if (guestNameInput) {
+                    guestNameInput.classList.add('border-red-500', 'bg-red-50');
+                    guestNameInput.focus();
+                }
+                if (errorMsg) errorMsg.classList.remove('hidden');
+                return;
+            }
+
+            if (guestNameInput) guestNameInput.classList.remove('border-red-500', 'bg-red-50');
+            if (errorMsg) errorMsg.classList.add('hidden');
+
+            const now = new Date();
+            const pad = (n) => String(n).padStart(2, '0');
+            const formattedDate = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+
+            const payload = {
+                submittedAt: formattedDate,
+                guestName,
+                wish,
+                attendText,
+                timeSlot,
+                eventTime,
+                eventLocation,
+                pageUrl: location.href,
+            };
+
+            btn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Đang gửi...';
+            btn.disabled = true;
+
+            const finish = () => {
+                goToSlide(4);
+                btn.innerHTML = '✅ Đã gửi xác nhận';
+                btn.disabled = false;
+            };
+
+            if (!RSVP_WEB_APP_URL) {
+                console.warn('Chua cau hinh RSVP_WEB_APP_URL de ghi xac nhan vao Google Sheets.');
+                setTimeout(finish, 500);
+                return;
+            }
+
+            const body = JSON.stringify(payload);
+            if (navigator.sendBeacon) {
+                const sent = navigator.sendBeacon(RSVP_WEB_APP_URL, new Blob([body], { type: 'text/plain' }));
+                if (sent) {
+                    setTimeout(finish, 500);
+                    return;
+                }
+            }
+
+            fetch(RSVP_WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body,
+            })
+                .catch(error => console.warn('Khong gui duoc xac nhan RSVP.', error))
+                .finally(() => setTimeout(finish, 500));
+        }
+        // Keyboard navigation
+        document.addEventListener('keydown', e => {
+            if (e.key === 'ArrowRight' && current < total) goToSlide(current + 1);
+            if (e.key === 'ArrowLeft'  && current > 1)     goToSlide(current - 1);
+        });
+
+        // Touch/swipe support
+        let touchStartX = 0;
+        let touchStartY = 0;
+        const card = document.querySelector('.card-phone');
+        card.addEventListener('touchstart', e => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }, {passive:true});
+        card.addEventListener('touchend', e => {
+            const dx = touchStartX - e.changedTouches[0].clientX;
+            const dy = touchStartY - e.changedTouches[0].clientY;
+            // Only trigger slide navigation if horizontal swipe is larger than vertical scroll
+            if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+                if (dx > 0 && current < total) goToSlide(current + 1);
+                else if (dx < 0 && current > 1) goToSlide(current - 1);
+            }
+        });
+
+        // ===== MINI CALENDAR =====
+        // ✏️ Đổi ngày tốt nghiệp ở đây:
+        let GRAD_YEAR  = 2026;
+        let GRAD_MONTH = 9;    // 0=Jan ... 9=Oct, 11=Dec
+        let GRAD_DAY   = 25;   // ngày tốt nghiệp
+
+        const VI_MONTHS = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6',
+                           'Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
+
+        let calYear  = GRAD_YEAR;
+        let calMonth = GRAD_MONTH;  // mở lịch tại tháng có ngày tốt nghiệp
+
+        function renderCalendar() {
+            const title  = document.getElementById('cal-title');
+            const grid   = document.getElementById('cal-grid');
+            title.textContent = VI_MONTHS[calMonth] + ', ' + calYear;
+            grid.innerHTML = '';
+
+            const firstDay  = new Date(calYear, calMonth, 1).getDay(); // 0=Sun
+            const daysInMon = new Date(calYear, calMonth + 1, 0).getDate();
+
+            // Empty cells before day 1
+            for (let i = 0; i < firstDay; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'py-1.5';
+                grid.appendChild(cell);
+            }
+
+            // Day cells
+            for (let d = 1; d <= daysInMon; d++) {
+                const cell   = document.createElement('div');
+                const dayOfW = new Date(calYear, calMonth, d).getDay(); // 0=Sun, 6=Sat
+                const isGrad = (d === GRAD_DAY && calMonth === GRAD_MONTH && calYear === GRAD_YEAR);
+
+                let cls = 'h-8 flex items-center justify-center text-xs rounded-xl cursor-default select-none font-semibold transition-all ';
+                if (isGrad) {
+                    cls += 'bg-gradient-to-tr from-amber-500 to-amber-400 text-slate-950 font-extrabold shadow-md shadow-amber-500/40 scale-105 ring-2 ring-amber-300';
+                } else if (dayOfW === 0) {
+                    cls += 'text-red-500 hover:bg-red-50';
+                } else if (dayOfW === 6) {
+                    cls += 'text-slate-700 hover:bg-slate-100';
+                } else {
+                    cls += 'text-slate-600 hover:bg-slate-50';
+                }
+
+                cell.className = cls;
+                cell.textContent = d;
+                if (isGrad) cell.title = '🎓 Ngày tốt nghiệp!';
+                grid.appendChild(cell);
+            }
+        }
+
+        function calPrev() { if (calMonth === 0) { calMonth = 11; calYear--; } else calMonth--; renderCalendar(); }
+        function calNext() { if (calMonth === 11) { calMonth = 0;  calYear++; } else calMonth++; renderCalendar(); }
+
+        renderCalendar();
+
+        // ===== COUNTDOWN TIMER LOGIC =====
+        let gradTargetTime = new Date(2026, 9, 25, 7, 30, 0).getTime();
+        function updateGradCountdown() {
+            const now = new Date().getTime();
+            const diff = gradTargetTime - now;
+
+            if (diff <= 0) {
+                document.getElementById('cd-days').textContent = '00';
+                document.getElementById('cd-hours').textContent = '00';
+                document.getElementById('cd-mins').textContent = '00';
+                document.getElementById('cd-secs').textContent = '00';
+                return;
+            }
+
+            const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+            const elD = document.getElementById('cd-days');
+            const elH = document.getElementById('cd-hours');
+            const elM = document.getElementById('cd-mins');
+            const elS = document.getElementById('cd-secs');
+
+            if (elD) elD.textContent = String(d).padStart(2, '0');
+            if (elH) elH.textContent = String(h).padStart(2, '0');
+            if (elM) elM.textContent = String(m).padStart(2, '0');
+            if (elS) elS.textContent = String(s).padStart(2, '0');
+        }
+
+        // ===== GOOGLE SHEETS DATA =====
+        // Sheet format: tab "Nhap", column A = key, column B = value.
+        const SHEET_ID = '1IXBwKL47sVRgMG_pX9XdXNq4Kf_r3ccXMAuKJHSn2V8';
+        const SHEET_NAME = 'Nhap';
+        const RSVP_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw4PzKfdAEkS8IMBmLuq1e1SROkowA1vfG6hDX3jiV2btGZ_RN375OYFmn-akFfFL8bxw/exec';
+
+        function parseCsv(text) {
+            const rows = [];
+            let row = [];
+            let value = '';
+            let quoted = false;
+
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                const next = text[i + 1];
+
+                if (char === '"' && quoted && next === '"') {
+                    value += '"';
+                    i++;
+                } else if (char === '"') {
+                    quoted = !quoted;
+                } else if (char === ',' && !quoted) {
+                    row.push(value);
+                    value = '';
+                } else if ((char === '\n' || char === '\r') && !quoted) {
+                    if (char === '\r' && next === '\n') i++;
+                    row.push(value);
+                    rows.push(row);
+                    row = [];
+                    value = '';
+                } else {
+                    value += char;
+                }
+            }
+
+            row.push(value);
+            rows.push(row);
+            return rows.filter(items => items.some(item => item.trim()));
+        }
+
+        function normalizeSheetRows(rows) {
+            return rows.reduce((data, row, index) => {
+                const key = (row[0] || '').trim();
+                const value = (row[1] || '').trim();
+                if (!key || index === 0 && key.toLowerCase() === 'truong') return data;
+                data[key] = value;
+                return data;
+            }, {});
+        }
+
+        function parseVietnameseDate(value) {
+            const match = String(value || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+            if (!match) return null;
+            return {
+                day: Number(match[1]),
+                month: Number(match[2]) - 1,
+                year: Number(match[3]),
+            };
+        }
+
+        function parseEventHour(value) {
+            const match = String(value || '').match(/(\d{1,2})(?::|h| giờ)?\s*(\d{2})?/i);
+            if (!match) return { hour: 9, minute: 0 };
+            return {
+                hour: Number(match[1]),
+                minute: Number(match[2] || 0),
+            };
+        }
+
+        function setText(id, value) {
+            const el = document.getElementById(id);
+            if (el && value) el.textContent = value;
+        }
+
+        function replaceTemplateText(root, data) {
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+            const nodes = [];
+            while (walker.nextNode()) nodes.push(walker.currentNode);
+
+            nodes.forEach(node => {
+                node.nodeValue = node.nodeValue.replace(/\{\{([^}]+)\}\}/g, (_, key) => {
+                    const cleanKey = key.trim();
+                    return Object.prototype.hasOwnProperty.call(data, cleanKey) ? data[cleanKey] : '';
+                });
+            });
+        }
+
+        function applySheetData(data) {
+            replaceTemplateText(document.body, data);
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlName = urlParams.get('name') || urlParams.get('khach') || urlParams.get('ten');
+            
+            if (!urlName) {
+                const sheetName = data.ho_ten || data.khach_moi || data.ten_khach;
+                if (sheetName && sheetName !== 'Nguyễn Văn A') {
+                    setText('invite-guest-name', sheetName);
+                } else {
+                    setText('invite-guest-name', 'Bạn thân mến');
+                }
+            }
+
+            if (data.ten_tot_nghiep || data.ten_chu_nhan || data.chu_nhan) {
+                setText('graduate-name', data.ten_tot_nghiep || data.ten_chu_nhan || data.chu_nhan);
+            }
+
+            if (data.gio && data.gio !== '18h00') {
+                setText('event-time', data.gio);
+            }
+
+            if (data.dia_diem && data.dia_diem !== 'Nhà hàng ABC') {
+                setText('event-location-name', data.dia_diem);
+            }
+
+            if (data.dia_chi) {
+                setText('event-location-address', data.dia_chi);
+            }
+
+            const dateText = data.ngay || data.ngay_to_chuc;
+            if (dateText && dateText !== '20/10/2026') {
+                setText('event-date-note', `CHỦ NHẬT · Ngày ${dateText} được đánh dấu nổi bật`);
+                const parsedDate = parseVietnameseDate(dateText);
+                if (parsedDate) {
+                    GRAD_YEAR = parsedDate.year;
+                    GRAD_MONTH = parsedDate.month;
+                    GRAD_DAY = parsedDate.day;
+                    calYear = GRAD_YEAR;
+                    calMonth = GRAD_MONTH;
+
+                    const parsedTime = parseEventHour(data.gio || '07:30');
+                    gradTargetTime = new Date(
+                        GRAD_YEAR,
+                        GRAD_MONTH,
+                        GRAD_DAY,
+                        parsedTime.hour,
+                        parsedTime.minute,
+                        0
+                    ).getTime();
+
+                    renderCalendar();
+                    updateGradCountdown();
+                }
+            }
+        }
+
+        async function loadInviteDataFromSheet() {
+            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`Google Sheet returned ${response.status}`);
+                const csv = await response.text();
+                applySheetData(normalizeSheetRows(parseCsv(csv)));
+            } catch (error) {
+                console.warn('Khong doc duoc Google Sheet. Hay public/publish sheet neu muon index tu cap nhat.', error);
+            }
+        }
+
+        function checkUrlGuestName() {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const guestName = params.get('name') || params.get('khach') || params.get('ten');
+                if (guestName) {
+                    setText('invite-guest-name', guestName);
+                    const input = document.getElementById('guest-name-input');
+                    if (input && !input.value) {
+                        input.value = guestName;
+                    }
+                } else {
+                    setText('invite-guest-name', 'Bạn thân mến');
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        setInterval(updateGradCountdown, 1000);
+        updateGradCountdown();
+        checkUrlGuestName();
+        loadInviteDataFromSheet();
+    </script>
+</body>
+</html>
