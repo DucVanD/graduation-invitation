@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Thiệp Tốt Nghiệp</title>
 
     <!-- Favicon Icon -->
@@ -163,6 +163,16 @@
         /* Input styling */
         .wish-input:focus { outline: none; border-color: #0f172a; box-shadow: 0 0 0 3px rgba(15,23,42,0.15); }
 
+        /* Prevent auto-zoom on iOS / Android when focusing inputs */
+        input[type="text"],
+        input[type="email"],
+        textarea,
+        select,
+        .wish-input {
+            font-size: 16px !important;
+            touch-action: manipulation;
+        }
+
         /* Radio custom */
         .radio-opt input[type="radio"] { display: none; }
         .radio-opt label {
@@ -233,10 +243,14 @@
             animation: spinSlow 8s linear infinite;
         }
 
-        /* Polaroid Photo Zoom & Camera Effect for Slide 4 */
+        /* Polaroid Photo Zoom & Gentle Float Effect for Slide 4 */
         @keyframes polaroidZoom {
             0% { opacity: 0; transform: scale(0.85) rotate(-3deg); }
             100% { opacity: 1; transform: scale(1) rotate(0deg); }
+        }
+        @keyframes polaroidFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-7px) rotate(0.8deg); }
         }
         .polaroid-card {
             background: #ffffff;
@@ -247,7 +261,7 @@
             transform-origin: center;
         }
         #slide-4.active .polaroid-card {
-            animation: polaroidZoom 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+            animation: polaroidZoom 0.8s cubic-bezier(0.16, 1, 0.3, 1) both, polaroidFloat 4s ease-in-out 0.8s infinite;
         }
 
         /* Staggered fade in elements on Slide 4 */
@@ -589,9 +603,8 @@
                         <!-- Custom Attend Text Input (Appears when Option 4 is selected) -->
                         <div id="custom-attend-wrapper" class="hidden mt-2">
                             <input type="text" id="custom-attend-input"
-                                class="wish-input w-full px-4 py-2.5 border-2 border-amber-300 rounded-2xl text-slate-700 text-xs bg-amber-50/50 transition-all font-medium"
-                                placeholder="Gõ phản hồi của bạn (VD: Tiếc quá không đến được, Ghé tặng hoa...)"
-                                value="💌 Tiếc quá, lần này mình không đến được">
+                                class="wish-input w-full px-4 py-2.5 border-2 border-amber-300 rounded-2xl text-slate-700 bg-amber-50/50 transition-all font-medium text-sm sm:text-base"
+                                placeholder="VD: Tiếc quá mình bận không đến được, Ghé tặng hoa sau nhé...">
                         </div>
                     </div>
 
@@ -791,9 +804,8 @@
             }
 
             if (current === 3) resetSubmitButton();
-            if (current === 4 && !hasFiredConfetti) {
-                hasFiredConfetti = true;
-                setTimeout(triggerTab4Confetti, 400);
+            if (current === 4) {
+                setTimeout(triggerTab4Confetti, 350);
             }
         }
 
