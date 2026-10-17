@@ -275,13 +275,7 @@
 <body class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 font-sans flex items-center justify-center sm:p-6 relative overflow-hidden text-slate-800">
 
     <!-- Background Music Audio Element -->
-    <audio id="bg-music" autoplay loop preload="auto">
-        <source src="music.mp3" type="audio/mpeg">
-        <source src="Photograph.mp3" type="audio/mpeg">
-        <source src="photograph.mp3" type="audio/mpeg">
-        <source src="Ed Sheeran Photograph Official Lyric Video.mp3" type="audio/mpeg">
-        <source src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=happy-day-113985.mp3" type="audio/mpeg">
-    </audio>
+    <audio id="bg-music" src="music.mp3" loop preload="auto" playsinline webkit-playsinline></audio>
 
     <!-- Decorative background dots -->
     <div class="absolute inset-0 pointer-events-none overflow-hidden">
@@ -332,7 +326,7 @@
             <!-- =====================================
                  SLIDE 1: PHONG BÌ (COVER)
             ===================================== -->
-            <div id="slide-1" class="slide-page active flex-col items-center justify-center bg-white px-8 py-8 relative">
+            <div id="slide-1" class="slide-page active flex-col items-center justify-center bg-white px-8 py-8 relative" onclick="tryInstantPlay()">
 
                 <!-- Logo / University placeholder -->
                 <div class="mb-5 text-center">
@@ -709,34 +703,34 @@
         let current = 1;
         const total  = 4;
         let isMusicPlaying = false;
-        const START_SECOND = 0; // Phát bản Piano Cover mượt mà từ đầu
 
         function playMusic() {
             const audio = document.getElementById('bg-music');
             const musicIcon = document.getElementById('music-icon');
             if (!audio) return;
 
-            if (!isMusicPlaying && START_SECOND > 0 && audio.currentTime < START_SECOND) {
-                audio.currentTime = START_SECOND;
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    isMusicPlaying = true;
+                    if (musicIcon) {
+                        musicIcon.classList.add('spin-music');
+                        musicIcon.textContent = '🎵';
+                    }
+                    removeMusicListeners();
+                }).catch(err => {
+                    console.log("Audio waiting for user gesture:", err);
+                });
             }
-
-            audio.play().then(() => {
-                isMusicPlaying = true;
-                if (musicIcon) {
-                    musicIcon.classList.add('spin-music');
-                    musicIcon.textContent = '🎵';
-                }
-            }).catch(err => {
-                console.log("Autoplay waiting for user gesture:", err);
-            });
         }
 
-        function toggleMusic() {
+        function toggleMusic(e) {
+            if (e) e.stopPropagation();
             const audio = document.getElementById('bg-music');
             const musicIcon = document.getElementById('music-icon');
             if (!audio) return;
 
-            if (isMusicPlaying) {
+            if (!audio.paused) {
                 audio.pause();
                 isMusicPlaying = false;
                 if (musicIcon) {
@@ -748,15 +742,24 @@
             }
         }
 
-        // Auto play music instantly on page load & any initial touch/click/scroll
-        const musicTriggerEvents = ['click', 'touchstart', 'touchend', 'pointerdown', 'mousedown', 'keydown', 'scroll'];
+        // Direct user gesture listeners (click, touch, pointer)
+        const musicTriggerEvents = ['click', 'touchend', 'touchstart', 'pointerdown'];
 
         function tryInstantPlay() {
-            if (isMusicPlaying) {
+            const audio = document.getElementById('bg-music');
+            if (!audio) return;
+
+            if (audio.paused) {
+                playMusic();
+            } else {
+                isMusicPlaying = true;
+                const musicIcon = document.getElementById('music-icon');
+                if (musicIcon) {
+                    musicIcon.classList.add('spin-music');
+                    musicIcon.textContent = '🎵';
+                }
                 removeMusicListeners();
-                return;
             }
-            playMusic();
         }
 
         function removeMusicListeners() {
@@ -771,7 +774,20 @@
             document.addEventListener(evt, tryInstantPlay, { passive: true });
         });
 
-        window.addEventListener('DOMContentLoaded', tryInstantPlay);
+        // Preload audio immediately on DOM load
+        function initAudioPreload() {
+            const audio = document.getElementById('bg-music');
+            if (audio) {
+                audio.load();
+            }
+            tryInstantPlay();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initAudioPreload);
+        } else {
+            initAudioPreload();
+        }
         window.addEventListener('load', tryInstantPlay);
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible' && !isMusicPlaying) {
@@ -814,6 +830,7 @@
         }
 
         function goToSlide(n) {
+            tryInstantPlay();
             const pages   = document.querySelectorAll('.slide-page');
             const dots    = document.querySelectorAll('#dot-bar .dot');
             const backBtn = document.getElementById('nav-back-btn');
