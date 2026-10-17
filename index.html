@@ -703,16 +703,24 @@
         let current = 1;
         const total  = 4;
         let isMusicPlaying = false;
+        const START_SECOND = 2.5; // Dịch lên 3s để vào ngay nốt đàn đầu tiên, bỏ đoạn im lặng
 
         function playMusic() {
             const audio = document.getElementById('bg-music');
             const musicIcon = document.getElementById('music-icon');
             if (!audio) return;
 
+            if (!isMusicPlaying && START_SECOND > 0 && audio.currentTime < START_SECOND) {
+                try { audio.currentTime = START_SECOND; } catch (e) {}
+            }
+
             const playPromise = audio.play();
             if (playPromise !== undefined) {
                 playPromise.then(() => {
                     isMusicPlaying = true;
+                    if (audio.currentTime < START_SECOND - 0.5) {
+                        try { audio.currentTime = START_SECOND; } catch (e) {}
+                    }
                     if (musicIcon) {
                         musicIcon.classList.add('spin-music');
                         musicIcon.textContent = '🎵';
